@@ -14,14 +14,16 @@ function DayPage() {
 	if (daysOfWeek.includes(currentDay)) {
 		return (
 			<div className="">
-				<div className="flex items-center justify-center w-full -mb-20">
+				<div className="flex items-center justify-center w-full">
 					<Menubar />
 				</div>
-				<div className="flex flex-col items-center justify-center h-screen font-semibold text-lg">
+				<div className="flex flex-col items-center justify-center min-h-screen font-semibold text-lg p-10">
 					<h1 className="text-xl font-bold p-6">
 						Enter Course Details for {currentDay}
 					</h1>
-					<FormComponent />
+					<div className="w-full max-w-5xl">
+						<FormComponent />
+					</div>
 				</div>
 			</div>
 		);
