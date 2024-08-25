@@ -1,95 +1,6 @@
-// import React, { useEffect, useState } from "react";
-// import { redirect, usePathname } from "next/navigation";
-// import { auth } from "@clerk/nextjs/server";
-// import { db } from "@/lib/db";
-// import { useAuth } from "@clerk/nextjs";
-// import axios from "axios";
-
-// interface Course {
-// 	id: string;
-// 	name: string;
-// 	startTime: string;
-// 	endTime: string;
-// 	location: string;
-// }
-
-// function CourseList({ currentDay }: { currentDay: string }) {
-// 	// const [courses, setCourses] = useState<Course[]>([]);
-// 	// const pathname = usePathname();
-// 	// const currentDay = pathname.split("/")[2];
-
-// 	const { userId } = useAuth();
-
-// 	// useEffect(() => {
-// 	// 	const fetchCourses = async () => {
-// 	// 		try {
-// 	// 			const response = await fetch("/api/courses", {
-// 	// 				method: "GET",
-// 	// 			});
-// 	// 			if (response.ok) {
-// 	// 				const data = await response.json();
-// 	// 				setCourses(
-// 	// 					data.filter(
-// 	// 						(course: Course & { day: string }) =>
-// 	// 							course.day === currentDay
-// 	// 					)
-// 	// 				);
-// 	// 			}
-// 	// 		} catch (error) {
-// 	// 			console.error("Error fetching courses:", error);
-// 	// 		}
-// 	// 	};
-
-// 	// 	fetchCourses();
-// 	// }, [currentDay]);
-
-// 	if (!userId) {
-// 		console.log("User not found");
-// 		redirect("/");
-// 	}
-
-// 	// const courseList = await db.course.findMany({
-// 	// 	where: {
-// 	// 		userId: userId,
-// 	// 	},
-// 	// 	orderBy: {
-// 	// 		startTime: "asc",
-// 	// 	},
-// 	// });
-
-// 	const response = await axios.get("/api/courses");
-// 	const courseList = response.data;
-
-// 	console.log("course list", courseList);
-
-// 	return (
-// 		<div className="mt-8">
-// 			<h2 className="text-xl font-semibold mb-4">
-// 				Your Courses for {currentDay}
-// 			</h2>
-// 			{courseList.length === 0 ? (
-// 				<p>No course added for this day yet.</p>
-// 			) : (
-// 				<ul className="space-y-4">
-// 					{courseList.map((course) => (
-// 						<li key={course.id} className="border p-4 rounded-md">
-// 							<h3 className="font-semibold">{course.name}</h3>
-// 							<p>
-// 								Time: {course.startTime} - {course.endTime}
-// 							</p>
-// 							<p>Location: {course.location}</p>
-// 						</li>
-// 					))}
-// 				</ul>
-// 			)}
-// 		</div>
-// 	);
-// }
-
-// export default CourseList;
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { X } from "lucide-react";
 
 interface Course {
 	id: string;
@@ -129,6 +40,19 @@ function CourseList({ currentDay }: { currentDay: string }) {
 		return <p>{error}</p>;
 	}
 
+	const handleDelete = async (courseId: string) => {
+		try {
+			await axios.delete(`/api/delete-course`, {
+				params: { courseId: courseId },
+			});
+			setCourseList(
+				courseList.filter((course) => course.id !== courseId)
+			);
+		} catch (error) {
+			console.error("Error deleting course:", error);
+		}
+	};
+
 	return (
 		<div className="mt-8">
 			<h2 className="text-xl font-semibold mb-4">
@@ -139,12 +63,21 @@ function CourseList({ currentDay }: { currentDay: string }) {
 			) : (
 				<ul className="space-y-4">
 					{courseList.map((course) => (
-						<li key={course.id} className="border p-4 rounded-md">
+						<li
+							key={course.id}
+							className="border p-4 rounded-md relative"
+						>
 							<h3 className="font-semibold">{course.name}</h3>
 							<p>
 								Time: {course.startTime} - {course.endTime}
 							</p>
 							<p>Location: {course.location}</p>
+							<button
+								className="absolute top-1/2 right-2 transform -translate-y-1/2"
+								onClick={() => handleDelete(course.id)}
+							>
+								<X />
+							</button>
 						</li>
 					))}
 				</ul>
