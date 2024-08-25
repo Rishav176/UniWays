@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poppins, Syne } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -20,12 +21,19 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
-			<body className={poppins.className}>
-				{children}
-
-				<Toaster />
-			</body>
-		</html>
+		<ClerkProvider
+			appearance={{
+				elements: {
+					footer: "hidden",
+				},
+			}}
+		>
+			<html lang="en">
+				<body className={poppins.className}>
+					{children}
+					<Toaster />
+				</body>
+			</html>
+		</ClerkProvider>
 	);
 }
