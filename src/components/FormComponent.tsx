@@ -19,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import { useParams } from "next/navigation";
 import { AxiosError } from "axios";
 import { useToast } from "@/components/ui/use-toast";
+import { TimeInput } from "@nextui-org/react";
+import { parseZonedDateTime, Time } from "@internationalized/date";
 
 // Validation schema
 const formSchema = z.object({
@@ -152,9 +154,20 @@ function FormComponent() {
 										<FormItem>
 											<FormLabel>Time</FormLabel>
 											<FormControl>
-												<Input
+												{/* <Input
 													placeholder="1:00 PM"
 													{...field}
+												/> */}
+												<TimeInput
+													label={null}
+													hourCycle={24}
+													defaultValue={
+														new Time(11, 45)
+													}
+													// defaultValue={parseZonedDateTime(
+													// 	"2022-11-07T00:45[America/Los_Angeles]"
+													// )}
+													granularity="minute"
 												/>
 											</FormControl>
 											<FormDescription>
