@@ -1,68 +1,38 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { PrismaClient } from "@prisma/client";
-import { getAuth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/lib/db";
+import { NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
+export async function POST(req: Request) {
+	try {
+		const { userId } = auth();
 
-export default async function handler(
-	req: NextApiRequest,
-	res: NextApiResponse
-) {
-	console.log("Method received:", req.method); // Debugging line
-
-	const { userId } = getAuth(req);
-
-	if (!userId) {
-		return res.status(401).json({ error: "Unauthorized" });
-	}
-
-	if (req.method === "POST") {
-		try {
-			const { courses, day } = req.body;
-
-			const user = await prisma.user.upsert({
-				where: { clerkId: userId },
-				update: {},
-				create: { clerkId: userId },
-			});
-
-			const createdCourses = await prisma.$transaction(
-				courses.map((course: any) =>
-					prisma.course.create({
-						data: {
-							day,
-							name: course.name,
-							startTime: course.startTime,
-							endTime: course.endTime,
-							location: course.location,
-							userId: user.id,
-						},
-					})
-				)
-			);
-
-			res.status(201).json(createdCourses);
-		} catch (error) {
-			console.error("Error creating courses:", error);
-			res.status(500).json({ error: "Error creating courses" });
+		if (!userId) {
+			return new NextResponse("User Not Authenticated", { status: 401 });
 		}
-	} else if (req.method === "GET") {
-		try {
-			const user = await prisma.user.findUnique({
-				where: { clerkId: userId },
-				include: { courses: true },
-			});
 
-			if (!user) {
-				return res.status(404).json({ error: "User not found" });
-			}
+		const { courses, day } = await req.json();
 
-			res.status(200).json(user.courses);
-		} catch (error) {
-			console.error("Error fetching courses:", error);
-			res.status(500).json({ error: "Error fetching courses" });
+		console.log("courses::: ", courses);
+
+		// Validate the incoming data
+		if (!courses || !day) {
+			return new NextResponse("Invalid data", { status: 400 });
 		}
-	} else {
-		res.status(405).json({ error: "Method not allowed" });
+
+		const createNewCourse = await db.course.create({
+			data: {
+				name: courses[0].name,
+				startTime: courses[0].startTime,
+				endTime: courses[0].endTime,
+				location: courses[0].location,
+				day: day,
+				userId: userId,
+			},
+		});
+
+		return NextResponse.json(createNewCourse, { status: 200 });
+	} catch (error) {
+		console.error("POST, NEW COURSE ERROR:", error);
+		return new NextResponse("POST, NEW COURSE ERROR", { status: 500 });
 	}
 }

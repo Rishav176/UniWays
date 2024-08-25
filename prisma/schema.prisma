@@ -13,19 +13,19 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model User {
-    id      String   @id @default(cuid())
-    clerkId String   @unique
-    courses Course[]
-}
+// model User {
+//     id      String   @id @default(cuid())
+//     clerkId String   @unique
+//     courses Course[]
+// }
 
 model Course {
     id        String @id @default(cuid())
+    userId    String
     day       String
     name      String
     startTime String
     endTime   String
     location  String
-    user      User   @relation(fields: [userId], references: [id])
-    userId    String
+    // user      User   @relation(fields: [userId], references: [id])
 }

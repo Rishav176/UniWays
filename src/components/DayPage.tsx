@@ -23,8 +23,8 @@ function DayPage() {
 						Enter Course Details for {currentDay}
 					</h1>
 					<div className="w-full max-w-5xl">
-						<FormComponent />
-						<CourseList />
+						<FormComponent currentDay={currentDay} />
+						<CourseList currentDay={currentDay} />
 					</div>
 				</div>
 			</div>

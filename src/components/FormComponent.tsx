@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { usePathname } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { PlusCircle, Trash2 } from "lucide-react";
+import axios from "axios";
 
 const courseSchema = z.object({
 	name: z
@@ -38,9 +39,9 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-function FormComponent() {
-	const pathname = usePathname();
-	const currentDay = pathname.split("/")[2];
+function FormComponent({ currentDay }: { currentDay: string }) {
+	// const pathname = usePathname();
+	// const currentDay = pathname.split("/")[2];
 	const { toast } = useToast();
 
 	const form = useForm<FormData>({
@@ -55,39 +56,74 @@ function FormComponent() {
 		name: "courses",
 	});
 
+	// const onSubmit: SubmitHandler<FormData> = async (data) => {
+	// 	try {
+	// 		// const response = await fetch("/api/courses", {
+	// 		// 	method: "POST",
+	// 		// 	headers: { "Content-Type": "application/json" },
+	// 		// 	body: JSON.stringify({
+	// 		// 		courses: data.courses,
+	// 		// 		day: currentDay,
+	// 		// 	}),
+	// 		// });
+
+	// 		const response = await axios.post("/api/courses", {
+	// 			courses: data.courses,
+	// 			day: currentDay,
+	// 		});
+
+	// 		if (response.status == 200) {
+	// 			toast({
+	// 				title: "Success",
+	// 				description: "Courses saved successfully",
+	// 			});
+	// 			form.reset({
+	// 				courses: [
+	// 					{ name: "", startTime: "", endTime: "", location: "" },
+	// 				],
+	// 			});
+	// 		} else {
+	// 			throw new Error("Failed to save courses");
+	// 		}
+	// 	} catch (error) {
+	// 		console.error("Error:", error);
+	// 		toast({
+	// 			title: "Error",
+	// 			description: "Failed to save courses. Please try again.",
+	// 			variant: "destructive",
+	// 		});
+	// 	}
+	// };
+
 	const onSubmit: SubmitHandler<FormData> = async (data) => {
 		try {
-			const response = await fetch("/api/courses", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					courses: data.courses,
-					day: currentDay,
-				}),
+			// const response = await fetch("/api/courses", {
+			// 	method: "POST",
+			// 	headers: { "Content-Type": "application/json" },
+			// 	body: JSON.stringify({
+			// 		courses: data.courses,
+			// 		day: currentDay,
+			// 	}),
+			// });
+
+			const response = await axios.post("/api/courses", {
+				courses: data.courses,
+				day: currentDay,
 			});
 
-			console.log(response);
+			console.log("response in form:::: ", response);
 
-			if (response.ok) {
+			if (response.status == 200) {
 				toast({
 					title: "Success",
-					description: "Courses saved successfully",
+					description: "Course created successfully",
 				});
-				form.reset({
-					courses: [
-						{ name: "", startTime: "", endTime: "", location: "" },
-					],
-				});
+				form.reset();
 			} else {
-				throw new Error("Failed to save courses");
+				console.error("Error creating course in else:", response);
 			}
 		} catch (error) {
-			console.error("Error:", error);
-			toast({
-				title: "Error",
-				description: "Failed to save courses. Please try again.",
-				variant: "destructive",
-			});
+			console.error("Error creating course:", error);
 		}
 	};
 
