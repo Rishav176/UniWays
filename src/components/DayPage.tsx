@@ -3,6 +3,7 @@
 import React from "react";
 import Menubar from "@/components/Menubar";
 import FormComponent from "@/components/FormComponent";
+import CourseList from "@/components/CourseList";
 import { usePathname } from "next/navigation";
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -23,6 +24,7 @@ function DayPage() {
 					</h1>
 					<div className="w-full max-w-5xl">
 						<FormComponent />
+						<CourseList />
 					</div>
 				</div>
 			</div>
