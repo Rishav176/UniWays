@@ -19,6 +19,7 @@ import { redirect, usePathname } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { PlusCircle, Trash2 } from "lucide-react";
 import axios from "axios";
+import Link from "next/link";
 
 const courseSchema = z.object({
 	name: z
@@ -171,7 +172,12 @@ function FormComponent({ currentDay }: { currentDay: string }) {
 				>
 					<PlusCircle className="mr-2 h-4 w-4" /> Add Another Course
 				</Button>
-				<Button type="submit">Submit All Courses</Button>
+				<Button type="submit" className="ml-2">
+					Submit All Courses
+				</Button>
+				<Link href={`/d/${currentDay}/paths`} className="mx-2">
+					<Button>Show Paths</Button>
+				</Link>
 			</form>
 		</Form>
 	);
