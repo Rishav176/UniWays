@@ -1,10 +1,9 @@
-"use client";
+// "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -16,180 +15,213 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useParams } from "next/navigation";
-import { AxiosError } from "axios";
+import { usePathname } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
-import { TimeInput } from "@nextui-org/react";
-import { parseZonedDateTime, Time } from "@internationalized/date";
+import { PlusCircle, Trash2 } from "lucide-react";
+import axios from "axios";
 
-// Validation schema
+const courseSchema = z.object({
+	name: z
+		.string()
+		.min(2, { message: "Course name must be at least 2 characters." }),
+	startTime: z.string().min(5, { message: "Start time is required." }),
+	endTime: z.string().min(5, { message: "End time is required." }),
+	location: z
+		.string()
+		.min(2, { message: "Location must be at least 2 characters." }),
+});
+
 const formSchema = z.object({
 	courses: z
-		.array(
-			z.object({
-				coursename: z.string().min(2, {
-					message: "Course name must be at least 2 characters.",
-				}),
-				building: z.string().min(2, {
-					message: "Building name must be at least 2 characters.",
-				}),
-				time: z.string().min(2, {
-					message: "Time must be at least 2 characters.",
-				}),
-			})
-		)
-		.length(5), // Expect exactly 5 courses
+		.array(courseSchema)
+		.min(1, { message: "At least one course is required." }),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-function FormComponent() {
-	const [isSendingMessage, setIsSendingMessage] = useState(false);
+function FormComponent({ currentDay }: { currentDay: string }) {
+	// const pathname = usePathname();
+	// const currentDay = pathname.split("/")[2];
 	const { toast } = useToast();
 
-	const params = useParams<{ day: string }>();
-
-	// Initialize the form
 	const form = useForm<FormData>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			courses: Array(5).fill({ coursename: "", building: "", time: "" }),
+			courses: [{ name: "", startTime: "", endTime: "", location: "" }],
 		},
 	});
 
-	const handleSendMessage: SubmitHandler<FormData> = async (data) => {
-		setIsSendingMessage(true);
+	const { fields, append, remove } = useFieldArray({
+		control: form.control,
+		name: "courses",
+	});
 
+	// const onSubmit: SubmitHandler<FormData> = async (data) => {
+	// 	try {
+	// 		// const response = await fetch("/api/courses", {
+	// 		// 	method: "POST",
+	// 		// 	headers: { "Content-Type": "application/json" },
+	// 		// 	body: JSON.stringify({
+	// 		// 		courses: data.courses,
+	// 		// 		day: currentDay,
+	// 		// 	}),
+	// 		// });
+
+	// 		const response = await axios.post("/api/courses", {
+	// 			courses: data.courses,
+	// 			day: currentDay,
+	// 		});
+
+	// 		if (response.status == 200) {
+	// 			toast({
+	// 				title: "Success",
+	// 				description: "Courses saved successfully",
+	// 			});
+	// 			form.reset({
+	// 				courses: [
+	// 					{ name: "", startTime: "", endTime: "", location: "" },
+	// 				],
+	// 			});
+	// 		} else {
+	// 			throw new Error("Failed to save courses");
+	// 		}
+	// 	} catch (error) {
+	// 		console.error("Error:", error);
+	// 		toast({
+	// 			title: "Error",
+	// 			description: "Failed to save courses. Please try again.",
+	// 			variant: "destructive",
+	// 		});
+	// 	}
+	// };
+
+	const onSubmit: SubmitHandler<FormData> = async (data) => {
 		try {
-			// Use the day from params in the request
-			await axios.post("/api/save-courses", {
-				...data,
-				day: params.day,
-			});
-
-			// Reset form fields
-			form.reset();
-
-			toast({
-				title: "Success!",
-				description: "Course details have been saved.",
-			});
-		} catch (error) {
-			console.error("Error in saving course details", error);
-			const axiosError = error as AxiosError;
-
-			// toast({
-			// 	title: "Error",
-			// 	description:
-			// 		axiosError.response?.data.message ??
-			// 		"There was a problem saving your course details. Please try again.",
-			// 	variant: "destructive",
+			// const response = await fetch("/api/courses", {
+			// 	method: "POST",
+			// 	headers: { "Content-Type": "application/json" },
+			// 	body: JSON.stringify({
+			// 		courses: data.courses,
+			// 		day: currentDay,
+			// 	}),
 			// });
 
-			setIsSendingMessage(false);
+			const response = await axios.post("/api/courses", {
+				courses: data.courses,
+				day: currentDay,
+			});
+
+			console.log("response in form:::: ", response);
+
+			if (response.status == 200) {
+				toast({
+					title: "Success",
+					description: "Course created successfully",
+				});
+				form.reset();
+			} else {
+				console.error("Error creating course in else:", response);
+			}
+		} catch (error) {
+			console.error("Error creating course:", error);
 		}
 	};
 
-	const { fields } = useFieldArray({
-		name: "courses",
-		control: form.control,
-	});
-
 	return (
-		<main className="flex flex-col items-center space-y-6">
-			<Form {...form}>
-				<form onSubmit={form.handleSubmit(handleSendMessage)}>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-						{fields.map((field, index) => (
-							<div
-								key={field.id}
-								className="space-y-4 border p-4 rounded-md"
+		<Form {...form}>
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+				{fields.map((field, index) => (
+					<div
+						key={field.id}
+						className="space-y-4 p-4 border rounded-md"
+					>
+						<h3 className="text-lg font-semibold">
+							Course {index + 1}
+						</h3>
+						<FormField
+							control={form.control}
+							name={`courses.${index}.name`}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Course Name</FormLabel>
+									<FormControl>
+										<Input
+											placeholder="CMPUT 201"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name={`courses.${index}.startTime`}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Start Time</FormLabel>
+									<FormControl>
+										<Input type="time" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name={`courses.${index}.endTime`}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>End Time</FormLabel>
+									<FormControl>
+										<Input type="time" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name={`courses.${index}.location`}
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Location</FormLabel>
+									<FormControl>
+										<Input placeholder="DICE" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						{fields.length > 1 && (
+							<Button
+								type="button"
+								variant="destructive"
+								onClick={() => remove(index)}
 							>
-								<h2 className="text-lg font-semibold">
-									Course {index + 1}
-								</h2>
-								<FormField
-									control={form.control}
-									name={`courses.${index}.coursename`}
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Course Name</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="CMPUT 201"
-													{...field}
-												/>
-											</FormControl>
-											<FormDescription>
-												Enter the name of your course.
-											</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name={`courses.${index}.building`}
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Building</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="DICE"
-													{...field}
-												/>
-											</FormControl>
-											<FormDescription>
-												Enter the building where the
-												class is located.
-											</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name={`courses.${index}.time`}
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Time</FormLabel>
-											<FormControl>
-												{/* <Input
-													placeholder="1:00 PM"
-													{...field}
-												/> */}
-												<TimeInput
-													label={null}
-													hourCycle={24}
-													defaultValue={
-														new Time(11, 45)
-													}
-													// defaultValue={parseZonedDateTime(
-													// 	"2022-11-07T00:45[America/Los_Angeles]"
-													// )}
-													granularity="minute"
-												/>
-											</FormControl>
-											<FormDescription>
-												Enter the time of the class.
-											</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
-						))}
+								<Trash2 className="mr-2 h-4 w-4" /> Remove
+								Course
+							</Button>
+						)}
 					</div>
-					<div className="flex items-center justify-center my-10">
-						<Button type="submit" disabled={isSendingMessage}>
-							{isSendingMessage
-								? "Saving..."
-								: "Submit All Courses"}
-						</Button>
-					</div>
-				</form>
-			</Form>
-		</main>
+				))}
+				<Button
+					type="button"
+					variant="outline"
+					onClick={() =>
+						append({
+							name: "",
+							startTime: "",
+							endTime: "",
+							location: "",
+						})
+					}
+				>
+					<PlusCircle className="mr-2 h-4 w-4" /> Add Another Course
+				</Button>
+				<Button type="submit">Submit All Courses</Button>
+			</form>
+		</Form>
 	);
 }
 
