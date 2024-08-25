@@ -17,6 +17,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+
 export default function Paths() {
   const position = { lat: 53.5232, lng: -113.5263 };
 
@@ -25,7 +26,7 @@ export default function Paths() {
       <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
         <Map
           defaultCenter={position}
-          defaultZoom={15}
+          defaultZoom={17}
           //mapId={process.env.NEXT_PUBLIC_MAP_ID}
           fullscreenControl={false}
         >
@@ -47,6 +48,7 @@ function Directions() {
 
   const [routes, setRoutes] = useState<google.maps.DirectionsRoute[]>([]);
   const [routeIndex, setRouteIndex] = useState(0);
+
   const selected = routes[routeIndex];
   const leg = selected?.legs[0];
 
@@ -81,7 +83,7 @@ function Directions() {
       });
   }, [directionsService, directionsRenderer]);
 
-  console.log(routes);
+  console.log(selected);
 
   if (!leg) return null;
   console.log(leg);
@@ -94,20 +96,27 @@ function Directions() {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{selected.summary}</DrawerTitle>
-            <DrawerDescription>
-              <p>
-                {leg.start_address.split(",").slice(0, 2).join(", ")} to{" "}
-                {leg.end_address.split(",").slice(0, 2).join(", ")}
-              </p>
-              <p>
-                <span className="font-bold">Distance:</span>{" "}
-                {leg.distance?.text}
-              </p>
-              <p>
-                <span className="font-bold">Duration:</span>{" "}
-                {leg.duration?.text}
-              </p>
-            </DrawerDescription>
+            {selected.legs.map((leg, index) => (
+              <DrawerDescription key={index}>
+                <p>
+                  <span className="font-bold">
+                    Class {index + 1} to Class {index + 2} (Point{" "}
+                    {String.fromCharCode(65 + index)}-
+                    {String.fromCharCode(65 + index + 1)})
+                  </span>
+                  : {leg.start_address.split(",").slice(0, 2).join(", ")} to{" "}
+                  {leg.end_address.split(",").slice(0, 2).join(", ")}
+                </p>
+                <p>
+                  <span className="font-bold">Distance:</span>{" "}
+                  {leg.distance?.text}
+                </p>
+                <p>
+                  <span className="font-bold">Duration:</span>{" "}
+                  {leg.duration?.text}
+                </p>
+              </DrawerDescription>
+            ))}
           </DrawerHeader>
           <DrawerFooter>
             <DrawerClose>
